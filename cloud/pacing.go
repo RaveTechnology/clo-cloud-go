@@ -20,6 +20,17 @@ type pacedTransport struct {
 	until time.Time
 }
 
+// Default clients share one request budget and provider cooldown per process.
+// Resolve the standard transport at dispatch so its configured proxy and TLS
+// behavior also apply to clients constructed with New.
+type defaultTransport struct{}
+
+func (defaultTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return http.DefaultTransport.RoundTrip(req)
+}
+
+var sharedAPITransport = newPacedTransport(defaultTransport{}, rate.NewLimiter(rate.Every(time.Second), 1))
+
 func newPacedTransport(base http.RoundTripper, limit *rate.Limiter) *pacedTransport {
 	if base == nil {
 		base = http.DefaultTransport

@@ -31,7 +31,7 @@ func (e *APIError) Unwrap() error { return e.cause }
 func IsNotFound(err error) bool   { var e *APIError; return errors.As(err, &e) && e.Status == 404 }
 
 func New(token string) (*Client, error) {
-	return newClient(token, endpoint, &http.Client{Timeout: 30 * time.Second})
+	return newClient(token, endpoint, &http.Client{Transport: sharedAPITransport, Timeout: 30 * time.Second})
 }
 func newClient(token, base string, h *http.Client) (*Client, error) {
 	if strings.TrimSpace(token) == "" {
